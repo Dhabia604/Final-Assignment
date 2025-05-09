@@ -1,0 +1,29 @@
+===== Grand Prix Experience System =====
+==================== Test 1: Customer Account Creation ====================
+User: Afshan, ID: 102, Email: afshan@gmail.com, Registered: 2023-01-12 00:00:00, Address: 12 Rose St, Phone: 5556789, Payment Info: Visa ** 2345
+User: Haya, ID: 103, Email: haya@gmail.com, Registered: 2023-02-15 00:00:00, Address: 34 Tulip Rd, Phone: 5559876, Payment Info: MasterCard ** 5678
+
+==================== Test 2: Admin Account Creation ====================
+User: Jona, ID: 2, Email: jona@example.com, Registered: 2025-05-09 00:51:19.500229, Role: Supervisor, Employee ID: 5002, Account Status: Active
+User: Alona, ID: 3, Email: alona@example.com, Registered: 2025-05-09 00:51:19.500237, Role: Coordinator, Employee ID: 5003, Account Status: Suspended
+
+==================== Test 3: Event Creation ====================
+Event: Grand Prix - Abu Dhabi, ID: 201, Date: 2024-05-26 00:00:00, Location: Abu Dhabi Circuit, Capacity: 1000
+Event: Grand Prix - Silverstone, ID: 202, Date: 2024-07-15 00:00:00, Location: Silverstone Circuit, Capacity: 1200
+Remaining Capacity Event1: 1000
+Remaining Capacity Event2: 1200
+
+==================== Test 4: Booking Creation ====================
+Booking ID: 301, User ID: 102, Event ID: 201, Date: 2025-05-09 00:51:19.500316, Tickets: 2, Total Price: 1440.0, Status: Confirmed
+Booking ID: 302, User ID: 103, Event ID: 202, Date: 2025-05-09 00:51:19.500320, Tickets: 1, Total Price: 800.0, Status: Pending
+
+==================== Test 5: Payment Info ====================
+Payment ID: 402, Booking ID: 301, Type: Digital, Date: 2025-05-09 00:51:19.500363, Status: Pending, Refund ID: None, Reason: , Transaction ID: 9001, Account: acc_123, Auth Code: AUTHXYZ
+Payment ID: 403, Booking ID: 302, Type: Credit Card, Date: 2025-05-09 00:51:19.500370, Status: Successful, Refund ID: None, Reason: , Card Number: 9876543210987654, Expiry: 11/26, Type: MasterCard
+
+==================== Test 6: Ticket Creation ====================
+Ticket ID: TKT-201-1, Booking ID: 301, Seat: G1, Price: 720.0, Check-in Time: 2024-05-26 14:00:00, Event ID: 201, Group ID: 1001, Group Count: 5, Group Gifts: Free T-Shirts
+Ticket ID: TKT-202-1, Booking ID: 302, Seat: S1, Price: 800.0, Check-in Time: 2024-07-15 15:00:00, Event ID: 202, Member ID: 2001, Name: Haya, Included Gifts: Free Parking
+==================== Test 7: Event Capacity After Adding Tickets ====================
+Remaining Capacity Event1 after 1 ticket: 999
+Remaining Capacity Event2 after 1 ticket: 1199
