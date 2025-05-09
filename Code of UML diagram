@@ -1,0 +1,517 @@
+# Import tools for working with enums and dates
+from enum import Enum
+from datetime import datetime
+
+# This Enum defines types of payment methods users can choose from
+class PaymentType(Enum):
+    CREDIT_CARD = "Credit Card"  # Paying with a credit card
+    DIGITAL = "Digital"          # Paying using digital methods like PayPal
+
+# This Enum defines the result of a payment transaction
+class PaymentTransactionStatus(Enum):
+    SUCCESSFUL = "Successful"  # Payment was successful
+    FAILED = "Failed"          # Payment failed
+    PENDING = "Pending"        # Payment is still processing
+
+# This Enum defines the current status of a user's account
+class AccountStatus(Enum):
+    ACTIVE = "Active"        # Account is active and usable
+    INACTIVE = "Inactive"    # Account exists but is not currently in use
+    SUSPENDED = "Suspended"  # Account has been temporarily blocked
+
+# This Enum defines the status of a booking
+class BookingStatus(Enum):
+    PENDING = "Pending"      # Booking request is waiting for confirmation
+    CONFIRMED = "Confirmed"  # Booking is confirmed
+    CANCELLED = "Cancelled"  # Booking has been cancelled
+
+# This Enum defines the types of credit cards accepted
+class CardType(Enum):
+    VISA = "Visa"
+    MASTERCARD = "MasterCard"
+    AMEX = "Amex"
+
+# Class that represents a general payment made by a user
+class Payment:
+    def __init__(self, booking_id, payment_id, payment_type, transaction_date, transaction_status, refund_id=None, refund_reason=""):
+        # Store all the payment details
+        self._booking_id = booking_id                  # ID of the booking this payment is for
+        self._payment_id = payment_id                  # Unique ID of the payment
+        self._payment_type = payment_type              # Type of payment (Digital or Credit Card)
+        self._transaction_date = transaction_date      # Date the payment was made
+        self._transaction_status = transaction_status  # Status of the payment (Success, Failed, etc.)
+        self._refund_id = refund_id                    # Optional refund ID if refunded
+        self._refund_reason = refund_reason            # Reason for the refund, if any
+
+    # Show payment information in a readable format
+    def display_payment_info(self):
+        return f"Payment ID: {self._payment_id}, Booking ID: {self._booking_id}, Type: {self._payment_type.value}, Date: {self._transaction_date}, Status: {self._transaction_status.value}, Refund ID: {self._refund_id}, Reason: {self._refund_reason}"
+
+    # Return the payment details as a dictionary (key-value pairs)
+    def get_payment_details(self):
+        return {
+            "payment_id": self._payment_id,
+            "booking_id": self._booking_id,
+            "payment_type": self._payment_type,
+            "transaction_date": self._transaction_date,
+            "transaction_status": self._transaction_status,
+            "refund_id": self._refund_id,
+            "refund_reason": self._refund_reason,
+        }
+
+    # Get and set methods for each private attribute
+    def get_payment_id(self): return self._payment_id
+    def set_payment_id(self, payment_id): self._payment_id = payment_id
+
+    def get_booking_id(self): return self._booking_id
+    def set_booking_id(self, booking_id): self._booking_id = booking_id
+
+    def get_payment_type(self): return self._payment_type
+    def set_payment_type(self, payment_type): self._payment_type = payment_type
+
+    def get_transaction_date(self): return self._transaction_date
+    def set_transaction_date(self, transaction_date): self._transaction_date = transaction_date
+
+    def get_transaction_status(self): return self._transaction_status
+    def set_transaction_status(self, transaction_status): self._transaction_status = transaction_status
+
+    def get_refund_id(self): return self._refund_id
+    def set_refund_id(self, refund_id): self._refund_id = refund_id
+
+    def get_refund_reason(self): return self._refund_reason
+    def set_refund_reason(self, refund_reason): self._refund_reason = refund_reason
+
+# Class for handling digital payments (like PayPal, Apple Pay)
+class DigitalPayment(Payment):
+    def __init__(self, booking_id, payment_id, transaction_id, account_identifier, authorization_code, transaction_date, transaction_status):
+        # Call the Payment class constructor and set digital-specific values
+        super().__init__(booking_id, payment_id, PaymentType.DIGITAL, transaction_date, transaction_status)
+        self._transaction_id = transaction_id              # ID from the payment processor (like PayPal)
+        self._account_identifier = account_identifier      # Account email or username used for payment
+        self._authorization_code = authorization_code      # Code confirming authorization
+
+    # Show all details about the digital payment
+    def display_digital_payment_info(self):
+        return f"{super().display_payment_info()}, Transaction ID: {self._transaction_id}, Account: {self._account_identifier}, Auth Code: {self._authorization_code}"
+
+    # Getters and setters for digital payment fields
+    def get_transaction_id(self): return self._transaction_id
+    def set_transaction_id(self, transaction_id): self._transaction_id = transaction_id
+
+    def get_account_identifier(self): return self._account_identifier
+    def set_account_identifier(self, account_identifier): self._account_identifier = account_identifier
+
+    def get_authorization_code(self): return self._authorization_code
+    def set_authorization_code(self, authorization_code): self._authorization_code = authorization_code
+
+# Class for credit card payments
+class CreditCard(Payment):
+    def __init__(self, booking_id, payment_id, card_number, expiry_date, card_type, transaction_date, transaction_status):
+        # Call the Payment constructor and set credit card specific fields
+        super().__init__(booking_id, payment_id, PaymentType.CREDIT_CARD, transaction_date, transaction_status)
+        self._card_number = card_number          # Credit card number (should be stored securely)
+        self._expiry_date = expiry_date          # Card's expiration date
+        self._card_type = card_type              # Visa, MasterCard, etc.
+
+    # Show all credit card payment details
+    def display_credit_card_info(self):
+        return f"{super().display_payment_info()}, Card Number: {self._card_number}, Expiry: {self._expiry_date}, Type: {self._card_type.value}"
+
+    # Getters and setters for credit card details
+    def get_card_number(self): return self._card_number
+    def set_card_number(self, card_number): self._card_number = card_number
+
+    def get_expiry_date(self): return self._expiry_date
+    def set_expiry_date(self, expiry_date): self._expiry_date = expiry_date
+
+    def get_card_type(self): return self._card_type
+    def set_card_type(self, card_type): self._card_type = card_type
+
+# Base class for any user in the system
+class User:
+    def __init__(self, user_name, user_id, user_password, user_email, registration_date):
+        self._user_name = user_name              # Name of the user
+        self._user_id = user_id                  # Unique ID for the user
+        self._user_password = user_password      # User password (should be encrypted in practice)
+        self._user_email = user_email            # Email address of the user
+        self._registration_date = registration_date  # Date user registered
+
+    # Show user information
+    def display_user_info(self):
+        return f"User: {self._user_name}, ID: {self._user_id}, Email: {self._user_email}, Registered: {self._registration_date}"
+
+    # Method to simulate a user requesting a special service
+    def request_special_service(self):
+        print(f"{self._user_name} requested a special service.")
+
+    # Method to simulate user giving feedback
+    def provide_feedback(self, feedback):
+        print(f"{self._user_name} provided feedback: {feedback}")
+
+    # Getters and setters for user attributes
+    def get_user_name(self): return self._user_name
+    def set_user_name(self, user_name): self._user_name = user_name
+
+    def get_user_id(self): return self._user_id
+    def set_user_id(self, user_id): self._user_id = user_id
+
+    def get_user_password(self): return self._user_password
+    def set_user_password(self, user_password): self._user_password = user_password
+
+    def get_user_email(self): return self._user_email
+    def set_user_email(self, user_email): self._user_email = user_email
+
+    def get_registration_date(self): return self._registration_date
+    def set_registration_date(self, registration_date): self._registration_date = registration_date
+
+# Represents a customer (inherits from User)
+class Customer(User):
+    def __init__(self, user_name, user_id, user_password, user_email, registration_date, customer_address, customer_phone, payment_info):
+        super().__init__(user_name, user_id, user_password, user_email, registration_date)
+        self._customer_address = customer_address      # Customer's home or billing address
+        self._customer_phone = customer_phone          # Contact number
+        self._payment_info = payment_info              # Information about payment methods
+
+    # Show customer details
+    def display_customer_info(self):
+        return f"{self.display_user_info()}, Address: {self._customer_address}, Phone: {self._customer_phone}, Payment Info: {self._payment_info}"
+
+    # Getters and setters
+    def get_customer_address(self): return self._customer_address
+    def set_customer_address(self, customer_address): self._customer_address = customer_address
+
+    def get_customer_phone(self): return self._customer_phone
+    def set_customer_phone(self, customer_phone): self._customer_phone = customer_phone
+
+    def get_payment_info(self): return self._payment_info
+    def set_payment_info(self, payment_info): self._payment_info = payment_info
+
+# Represents an admin user (inherits from User)
+class Admin(User):
+    def __init__(self, user_name, user_id, user_password, user_email, registration_date, admin_role, employee_id, account_status):
+        super().__init__(user_name, user_id, user_password, user_email, registration_date)
+        self._admin_role = admin_role              # Role of the admin (e.g., Manager)
+        self._employee_id = employee_id            # ID number assigned to employee
+        self._account_status = account_status      # Current status of the admin's account
+
+    # Show admin details
+    def display_admin_info(self):
+        return f"{self.display_user_info()}, Role: {self._admin_role}, Employee ID: {self._employee_id}, Account Status: {self._account_status.value}"
+
+    # Getters and setters
+    def get_admin_role(self): return self._admin_role
+    def set_admin_role(self, admin_role): self._admin_role = admin_role
+
+    def get_employee_id(self): return self._employee_id
+    def set_employee_id(self, employee_id): self._employee_id = employee_id
+
+    def get_account_status(self): return self._account_status
+    def set_account_status(self, account_status): self._account_status = account_status
+
+# Represents a booking for an event
+class Booking:
+    def __init__(self, user_id, event_id, booking_id, booking_date, number_of_tickets, total_price, booking_status):
+        # Initialize booking details
+        self._user_id = user_id  # ID of the user making the booking
+        self._event_id = event_id  # ID of the event
+        self._booking_id = booking_id  # Unique ID for the booking
+        self._booking_date = booking_date  # Date the booking was made
+        self._number_of_tickets = number_of_tickets  # Number of tickets booked
+        self._total_price = total_price  # Total price for the booking
+        self._booking_status = booking_status  # Status of the booking (e.g., confirmed, cancelled)
+        self._list_reservation = []  # List to hold reservations associated with the booking
+
+    # Returns a formatted string of booking information
+    def display_booking_info(self):
+        return f"Booking ID: {self._booking_id}, User ID: {self._user_id}, Event ID: {self._event_id}, Date: {self._booking_date}, Tickets: {self._number_of_tickets}, Total Price: {self._total_price}, Status: {self._booking_status.value}"
+
+    # Getter and setter methods for each attribute
+    def get_user_id(self): return self._user_id
+    def set_user_id(self, user_id): self._user_id = user_id
+    def get_event_id(self): return self._event_id
+    def set_event_id(self, event_id): self._event_id = event_id
+    def get_booking_id(self): return self._booking_id
+    def set_booking_id(self, booking_id): self._booking_id = booking_id
+    def get_booking_date(self): return self._booking_date
+    def set_booking_date(self, booking_date): self._booking_date = booking_date
+    def get_number_of_tickets(self): return self._number_of_tickets
+    def set_number_of_tickets(self, number_of_tickets): self._number_of_tickets = number_of_tickets
+    def get_total_price(self): return self._total_price
+    def set_total_price(self, total_price): self._total_price = total_price
+    def get_booking_status(self): return self._booking_status
+    def set_booking_status(self, booking_status): self._booking_status = booking_status
+    def get_list_reservation(self): return self._list_reservation
+    def set_list_reservation(self, list_reservation): self._list_reservation = list_reservation
+    
+# Represents a discount applied to a booking or ticket
+class Discount:
+    def __init__(self, discount_id, discount_percentage, discount_amount, discount_code, max_discount_amount):
+        self._discount_id = discount_id  # Unique ID for the discount
+        self._discount_percentage = discount_percentage  # Percentage discount
+        self._discount_amount = discount_amount  # Flat amount discount
+        self._discount_code = discount_code  # Code used to apply the discount
+        self._max_discount_amount = max_discount_amount  # Max discount value allowed
+
+    # Getter and setter methods
+    def get_discount_id(self): return self._discount_id
+    def set_discount_id(self, discount_id): self._discount_id = discount_id
+    def get_discount_percentage(self): return self._discount_percentage
+    def set_discount_percentage(self, discount_percentage): self._discount_percentage = discount_percentage
+    def get_discount_amount(self): return self._discount_amount
+    def set_discount_amount(self, discount_amount): self._discount_amount = discount_amount
+    def get_discount_code(self): return self._discount_code
+    def set_discount_code(self, discount_code): self._discount_code = discount_code
+    def get_max_discount_amount(self): return self._max_discount_amount
+    def set_max_discount_amount(self, max_discount_amount): self._max_discount_amount = max_discount_amount
+    
+# Represents a basic ticket for an event
+class Ticket:
+    def __init__(self, type_id, booking_id, ticket_id, seat_number, ticket_price, check_in_time, event_id):
+        self._type_id = type_id          # Type of ticket (could be general, VIP, etc.)
+        self._booking_id = booking_id      # Associated booking ID
+        self._ticket_id = ticket_id          # Unique ticket ID
+        self._seat_number = seat_number      # Seat assigned to the ticket
+        self._ticket_price = ticket_price      # Price of the ticket
+        self._check_in_time = check_in_time  # Check-in time for the ticket holder
+        self._event_id = event_id            # ID of the event this ticket belongs to
+    # Returns formatted ticket info
+    def display_ticket_info(self):
+        return f"Ticket ID: {self._ticket_id}, Booking ID: {self._booking_id}, Seat: {self._seat_number}, Price: {self._ticket_price}, Check-in Time: {self._check_in_time}, Event ID: {self._event_id}"
+
+
+    # Getter and setter methods
+    def get_type_id(self): return self._type_id
+    def set_type_id(self, type_id): self._type_id = type_id
+    def get_booking_id(self): return self._booking_id
+    def set_booking_id(self, booking_id): self._booking_id = booking_id
+    def get_ticket_id(self): return self._ticket_id
+    def set_ticket_id(self, ticket_id): self._ticket_id = ticket_id
+    def get_seat_number(self): return self._seat_number
+    def set_seat_number(self, seat_number): self._seat_number = seat_number
+    def get_ticket_price(self): return self._ticket_price
+    def set_ticket_price(self, ticket_price): self._ticket_price = ticket_price
+    def get_check_in_time(self): return self._check_in_time
+    def set_check_in_time(self, check_in_time): self._check_in_time = check_in_time
+    def get_event_id(self): return self._event_id
+    def set_event_id(self, event_id): self._event_id = event_id
+
+
+# Represents a group-discounted ticket (inherits from Ticket)
+class GroupDiscount(Ticket):
+    def __init__(self, type_id, booking_id, ticket_id, seat_number, ticket_price, check_in_time, group_id, group_count, group_gifts, event_id):
+        super().__init__(type_id, booking_id, ticket_id, seat_number, ticket_price, check_in_time, event_id)
+        self._group_id = group_id  # ID of the group
+        self._group_count = group_count  # Number of people in the group
+        self._group_gifts = group_gifts  # Gifts provided to the group
+
+
+    # Displays ticket + group discount info
+    def display_group_discount_info(self):
+        return f"{self.display_ticket_info()}, Group ID: {self._group_id}, Group Count: {self._group_count}, Group Gifts: {self._group_gifts}"
+
+
+    # Getter/setter for additional attributes
+    def get_group_id(self): return self._group_id
+    def set_group_id(self, group_id): self._group_id = group_id
+    def get_group_count(self): return self._group_count
+    def set_group_count(self, group_count): self._group_count = group_count
+    def get_group_gifts(self): return self._group_gifts
+    def set_group_gifts(self, group_gifts): self._group_gifts = group_gifts
+
+# Represents a season membership ticket (inherits from Ticket)
+class SeasonMembership(Ticket):
+    def __init__(self, type_id, booking_id, ticket_id, seat_number, ticket_price, check_in_time, member_id, member_name, included_gifts, event_id):
+        super().__init__(type_id, booking_id, ticket_id, seat_number, ticket_price, check_in_time, event_id)
+        self._member_id = member_id  # Unique member ID
+        self._member_name = member_name  # Member's full name
+        self._included_gifts = included_gifts  # Gifts included in membership
+    def display_season_membership_info(self):
+        return f"{self.display_ticket_info()}, Member ID: {self._member_id}, Name: {self._member_name}, Included Gifts: {self._included_gifts}"
+
+
+    def get_member_id(self): return self._member_id
+    def set_member_id(self, member_id): self._member_id = member_id
+    def get_member_name(self): return self._member_name
+    def set_member_name(self, member_name): self._member_name = member_name
+    def get_included_gifts(self): return self._included_gifts
+    def set_included_gifts(self, included_gifts): self._included_gifts = included_gifts
+
+# Represents a single-race access pass (inherits from Ticket)
+class SingleRacePass(Ticket):
+    def __init__(self, type_id, booking_id, ticket_id, seat_number, ticket_price, check_in_time, single_race_pass_id, pass_expiry, pass_benefits):
+        super().__init__(type_id, booking_id, ticket_id, seat_number, ticket_price, check_in_time)
+        self._single_race_pass_id = single_race_pass_id  # Unique ID for the pass
+        self._pass_expiry = pass_expiry  # Expiration date/time of the pass
+        self._pass_benefits = pass_benefits  # Benefits included with the pass
+
+    # Getter/setters
+    def get_single_race_pass_id(self): return self._single_race_pass_id
+    def set_single_race_pass_id(self, single_race_pass_id): self._single_race_pass_id = single_race_pass_id
+    def get_pass_expiry(self): return self._pass_expiry
+    def set_pass_expiry(self, pass_expiry): self._pass_expiry = pass_expiry
+    def get_pass_benefits(self): return self._pass_benefits
+    def set_pass_benefits(self, pass_benefits): self._pass_benefits = pass_benefits
+
+# Represents a weekend package ticket with added benefits (inherits from Ticket)
+class WeekendPackage(Ticket):
+    def __init__(self, type_id, booking_id, ticket_id, seat_number, ticket_price, check_in_time, package_id, package_type, package_benefits):
+        super().__init__(type_id, booking_id, ticket_id, seat_number, ticket_price, check_in_time)
+        self._package_id = package_id  # ID of the package
+        self._package_type = package_type  # Type (e.g., deluxe, standard)
+        self._package_benefits = package_benefits  # List of benefits included
+
+    def display_weekend_package_info(self):
+        return f"{self.display_ticket_info()}, Package ID: {self._package_id}, Type: {self._package_type}, Benefits: {self._package_benefits}"
+
+    def get_package_id(self): return self._package_id
+    def set_package_id(self, package_id): self._package_id = package_id
+    def get_package_type(self): return self._package_type
+    def set_package_type(self, package_type): self._package_type = package_type
+    def get_package_benefits(self): return self._package_benefits
+    def set_package_benefits(self, package_benefits): self._package_benefits = package_benefits
+
+# Represents an event such as a Grand Prix race
+class Event:
+    # Initializes a new Event with details like name, ID, date, location, and capacity
+    def __init__(self, event_name, event_id, event_date, event_location, event_capacity):
+        self._event_name = event_name        # Name of the event
+        self._event_id = event_id            # Unique identifier for the event
+        self._event_date = event_date        # Date of the event
+        self._event_location = event_location    # Location of the event
+        self._event_capacity = event_capacity    # Total number of tickets available
+        self._list_user_tickets = []        # List to store Ticket objects for this event
+        self._next_ticket_id = 1             # Simple way to generate unique ticket IDs for this event
+
+    # Method to create a new ticket for this event
+    def create_ticket(self, type_id, booking_id, seat_number, ticket_price, check_in_time):
+        ticket_id = f"TKT-{self._event_id}-{self._next_ticket_id}"
+        new_ticket = Ticket(type_id, booking_id, ticket_id, seat_number, ticket_price, check_in_time, self._event_id)
+        self._list_user_tickets.append(new_ticket)
+        self._next_ticket_id += 1
+        return new_ticket
+
+    # Returns a formatted string with the event’s key information
+    def display_event_info(self):
+        return f"Event: {self._event_name}, ID: {self._event_id}, Date: {self._event_date}, Location: {self._event_location}, Capacity: {self._event_capacity}"
+
+    # Calculates and returns how many tickets are still available for the event
+    def get_remaining_capacity(self):
+        return self._event_capacity - len(self._list_user_tickets)
+
+    # Returns the event’s start time (simplified as the event date)
+    def get_start_time(self): return self._event_date
+
+    # Returns the event’s end time (simplified as the event date)
+    def get_end_time(self): return self._event_date
+
+    # Getter and setter for event name
+    def get_event_name(self): return self._event_name
+    def set_event_name(self, event_name): self._event_name = event_name
+
+    # Getter and setter for event ID
+    def get_event_id(self): return self._event_id
+    def set_event_id(self, event_id): self._event_id = event_id
+
+    # Getter and setter for event date
+    def get_event_date(self): return self._event_date
+    def set_event_date(self, event_date): self._event_date = event_date
+
+    # Getter and setter for event location
+    def get_event_location(self): return self._event_location
+    def set_event_location(self, event_location): self._event_location = event_location
+
+    # Getter and setter for event capacity
+    def get_event_capacity(self): return self._event_capacity
+    def set_event_capacity(self, event_capacity): self._event_capacity = event_capacity
+
+    # Getter for the list of user tickets
+    def get_tickets(self): return self._list_user_tickets
+    # Setter for the list of user tickets (can be used if needed, but creation should ideally go through create_ticket)
+    def set_tickets(self, tickets): self._list_user_tickets = tickets
+
+# ********** TEST CASES **********
+
+if __name__ == "__main__": # Entry point for test execution
+    print("===== Grand Prix Experience System =====")
+
+    # ---------- Test 1: Customer Account Creation ----------
+    print("==================== Test 1: Customer Account Creation ====================")
+    # Create sample customers
+    customer1 = Customer("Afshan", 102, "passAfshan", "afshan@gmail.com",
+                         datetime(2023, 1, 12), "12 Rose St", 5556789, "Visa ** 2345")
+    customer2 = Customer("Haya", 103, "passHaya", "haya@gmail.com",
+                         datetime(2023, 2, 15), "34 Tulip Rd", 5559876, "MasterCard ** 5678")
+    # Display customer information
+    print(customer1.display_customer_info())
+    print(customer2.display_customer_info())
+    print()
+
+    # ---------- Test 2: Admin Account Creation ----------
+    print("==================== Test 2: Admin Account Creation ====================")
+    # Create sample admin users
+    admin1 = Admin("Jona", 2, "passJona", "jona@example.com", datetime.now(),
+                  "Supervisor", 5002, AccountStatus.ACTIVE)
+    admin2 = Admin("Alona", 3, "passAlona", "alona@example.com", datetime.now(),
+                  "Coordinator", 5003, AccountStatus.SUSPENDED)
+    # Display admin information
+    print(admin1.display_admin_info())
+    print(admin2.display_admin_info())
+    print()
+
+    # ---------- Test 3: Event Creation ----------
+    print("==================== Test 3: Event Creation ====================")
+    # Create sample events
+    event1 = Event("Grand Prix - Abu Dhabi", 201, datetime(2024, 5, 26), "Abu Dhabi Circuit", 1000)
+    event2 = Event("Grand Prix - Silverstone", 202, datetime(2024, 7, 15), "Silverstone Circuit", 1200)
+    # Display event information and remaining capacity
+    print(event1.display_event_info())
+    print(event2.display_event_info())
+    print(f"Remaining Capacity Event1: {event1.get_remaining_capacity()}")
+    print(f"Remaining Capacity Event2: {event2.get_remaining_capacity()}")
+    print()
+
+    # ---------- Test 4: Booking Creation ----------
+    print("==================== Test 4: Booking Creation ====================")
+    booking1 = Booking(customer1._user_id, event1._event_id, 301, datetime.now(), 2, 1440.0, BookingStatus.CONFIRMED)
+    booking2 = Booking(customer2._user_id, event2._event_id, 302, datetime.now(), 1, 800.0, BookingStatus.PENDING)
+    print(booking1.display_booking_info())
+    print(booking2.display_booking_info())
+    print()
+
+# ---------- Test 5: Payment Info ----------
+    print("==================== Test 5: Payment Info ====================")
+    # Create payment records
+    digital_payment = DigitalPayment(booking1._booking_id, 402, 9001, "acc_123", "AUTHXYZ", datetime.now(), PaymentTransactionStatus.PENDING)
+    credit_card_payment = CreditCard(booking2._booking_id, 403, "9876543210987654", "11/26", CardType.MASTERCARD, datetime.now(), PaymentTransactionStatus.SUCCESSFUL)
+    # Display payment details
+    print(digital_payment.display_digital_payment_info())
+    print(credit_card_payment.display_credit_card_info())
+    print()
+    
+    print("==================== Test 6: Ticket Creation ====================")
+    # Create sample bookings
+    booking1 = Booking(1, 201, 301, datetime.now(), 2, 1440.0, BookingStatus.CONFIRMED)
+    booking2 = Booking(2, 202, 302, datetime.now(), 1, 800.0, BookingStatus.PENDING)
+
+    # Create special ticket types
+    group_discount_ticket = GroupDiscount(
+        2, booking1.get_booking_id(), "TKT-201-1", "G1", 720.0, datetime(2024, 5, 26, 14, 0),
+        1001, 5, "Free T-Shirts", booking1.get_event_id()
+    )
+    season_membership_ticket = SeasonMembership(
+        3, booking2.get_booking_id(), "TKT-202-1", "S1", 800.0, datetime(2024, 7, 15, 15, 0),
+        2001, "Haya", "Free Parking", booking2.get_event_id()
+    )
+    # Display ticket information
+    print(group_discount_ticket.display_group_discount_info())
+    print(season_membership_ticket.display_season_membership_info())
+
+    # ---------- Test 7: Event Capacity After Adding Tickets ----------
+    print("==================== Test 7: Event Capacity After Adding Tickets ====================")
+    # Simulate tickets being added to event by directly manipulating the list
+    event1._list_user_tickets.append(group_discount_ticket)
+    event2._list_user_tickets.append(season_membership_ticket)
+    # Show updated remaining capacity
+    print(f"Remaining Capacity Event1 after 1 ticket: {event1.get_remaining_capacity()}")
+    print(f"Remaining Capacity Event2 after 1 ticket: {event2.get_remaining_capacity()}")
+    print()
